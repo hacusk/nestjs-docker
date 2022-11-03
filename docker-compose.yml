@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    platform: linux/x86_64
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+    hostname: db
+
+  app:
+    image: node:18-alpine
+    build: ./app
+    working_dir: /opt/app
+    ports:
+      - 8080:3000
+    volumes:
+      - ./app:/opt/app
+      - node_modules_volume:/opt/app/node_modules
+    entrypoint: sh
+    command:
+      - -c
+      - |
+        [ -f ~/.exec-once ] || {
+          yarn install && touch ~/.exec-once
+        }
+        yarn start:dev
+
+volumes:
+  node_modules_volume:
